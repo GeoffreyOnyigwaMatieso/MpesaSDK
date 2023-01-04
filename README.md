@@ -3,5 +3,5 @@ After many hours of researching for a gem or article explaining the process of i
 ## Requirements
 1. M-Pesa Daraja Account and a Sandbox app
 2. Ruby on Rails
-3. Ngrok 
+3. Ngrok: A cross-platform application that enables developers to expose a local development server to the Internet with minimal effort. It makes your software locally hosted web server appears to be  hosted on a subdomain  of ngrok.com, meaning that no public Ip/Domain name on the local machine is needed.
 4. Ruby Gems -> rest-client 2.0 and rack-cors
