@@ -47,7 +47,17 @@ Rails.application.configure do
   config.active_record.verbose_query_logs = true
   
   #enable to have dynamic urls and allow to access our rails app from ngrok
-  config.hosts << /[a-z0-9]+\.ngrok\.io/
+  #If you are accessing this URl in a specific port (typically :3000) the :\d+ part of the regular expression is necessary
+  config.hosts <<  /.+\.ngrok\.io:\d+/
+
+  # config.hosts << "hostname" # Whitelist one hostname
+
+  # config.hosts << /application\.local\Z/ # Whitelist a test domain
+
+  #Clear the entire whitelist, which lets through requests for all hostnames
+  # config.hosts.clear
+
+  # config.hosts = nil 
 
 
 
