@@ -50,14 +50,14 @@ Rails.application.configure do
   #If you are accessing this URl in a specific port (typically :3000) the :\d+ part of the regular expression is necessary
   config.hosts <<  /.+\.ngrok\.io:\d+/
 
-  # config.hosts << "hostname" # Whitelist one hostname
+   config.hosts << "hostname" # Whitelist one hostname
 
-  # config.hosts << /application\.local\Z/ # Whitelist a test domain
+   config.hosts << /application\.local\Z/ # Whitelist a test domain
 
   #Clear the entire whitelist, which lets through requests for all hostnames
-  # config.hosts.clear
+   config.hosts.clear
 
-  # config.hosts = nil 
+   config.hosts = nil 
 
 
 
