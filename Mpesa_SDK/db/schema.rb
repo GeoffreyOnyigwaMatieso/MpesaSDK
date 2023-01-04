@@ -10,7 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_01_04_140049) do
+ActiveRecord::Schema[7.0].define(version: 2023_01_04_182357) do
+  create_table "access_tokens", force: :cascade do |t|
+    t.string "token"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "mpesas", force: :cascade do |t|
     t.string "checkoutRequestID"
     t.string "merchantRequestID"

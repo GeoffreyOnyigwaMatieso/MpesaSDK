@@ -1,5 +1,6 @@
 require "active_support/core_ext/integer/time"
 
+
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
@@ -44,6 +45,10 @@ Rails.application.configure do
 
   # Highlight code that triggered database queries in logs.
   config.active_record.verbose_query_logs = true
+  
+  #enable to have dynamic urls and allow to access our rails app from ngrok
+  config.hosts << /[a-z0-9]+\.ngrok\.io/
+
 
 
   # Raises error for missing translations.
