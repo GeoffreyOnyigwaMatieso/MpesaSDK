@@ -1,6 +1,5 @@
-require 'rest-client'
-
 class MpesasController < ApplicationController
+    require 'rest-client'
 
     #Generate and get Access token from the Authorized API.
     private
