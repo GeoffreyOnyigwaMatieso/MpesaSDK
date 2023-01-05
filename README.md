@@ -417,10 +417,8 @@ Rails.application.routes.draw do
     post 'stkquery', to: 'mpesas#stkquery'
 end
 ```
-- The full code for this tutorial can be found [here](https://github.com/Annastacia-dev/daraja-test).
+.
 
-That's it for this tutorial. I hope you found it helpful. If you have any questions, feel free to reach out to me on email: annetotoh@gmail.com.
-THANK YOU!
 
 
 
