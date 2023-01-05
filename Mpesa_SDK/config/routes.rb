@@ -6,4 +6,7 @@ Rails.application.routes.draw do
   # root "articles#index"
   post 'stkpush', to: 'mpesas#stkpush'
 
+  post 'stkquery', to: 'mpesas#stkquery'
+
+
 end
