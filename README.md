@@ -1,58 +1,54 @@
-Implementing M-pesa STK push and STK push query APIs in Rails API
-Setup
-Daraja
+## Implementing M-pesa STK push and STK push query APIs in Rails API
+### Setup
+#### Daraja
+- To get started head over to [daraja](https://developer.safaricom.co.ke/) and sign up for a developer account or login if you already have one.
+- On my apps tab, create a new sandbox app and name it whatever you want, then tick all the check boxes and click on create app.
+- You will be redirected to the app details page where you will find your consumer key and consumer secret.
+- Save these somewhere safe as you will need them later.
+- Navigate to the APIs tab and on M-pesa Express click on Simulate, on the input prompt select the app you just created.
+- This will autopopulate some fields for you, you can leave them as they are.
+- Scroll down and click on test credentials.
+- Save your initiator password and passkey somewhere safe as you will need them later.
 
-    To get started head over to daraja and sign up for a developer account or login if you already have one.
-    On my apps tab, create a new sandbox app and name it whatever you want, then tick all the check boxes and click on create app.
-    You will be redirected to the app details page where you will find your consumer key and consumer secret.
-    Save these somewhere safe as you will need them later.
-    Navigate to the APIs tab and on M-pesa Express click on Simulate, on the input prompt select the app you just created.
-    This will autopopulate some fields for you, you can leave them as they are.
-    Scroll down and click on test credentials.
-    Save your initiator password and passkey somewhere safe as you will need them later.
+#### Ngrok
+- Go to [ngrok](https://ngrok.com/) and sign up for a free account or login if you already have one.
+- To install on ubuntu ``` sudo snap install ngrok ``` or download the zip file from the website and extract it.
+- To connect your account to ngrok run ``` ngrok authtoken <your authtoken> ``` and replace <your authtoken> with your authtoken.
+- We will get back to ngrok later, let's first setup our rails app.
 
-Ngrok
+#### Rails
+- Create a new rails app ``` rails new <app-name> --api ``` in my case ``` rails new daraja-test --api  ```.
+- Add the following gems to your gemfile and run ``` bundle install ```.
 
-    Go to ngrok and sign up for a free account or login if you already have one.
-    To install on ubuntu sudo snap install ngrok or download the zip file from the website and extract it.
-    To connect your account to ngrok run ngrok authtoken <your authtoken> and replace with your authtoken.
-    We will get back to ngrok later, let's first setup our rails app.
-
-Rails
-
-    Create a new rails app rails new <app-name> --api in my case rails new daraja-test --api .
-    Add the following gems to your gemfile and run bundle install.
-
+```ruby
 gem 'rack-cors'
 gem 'rest-client'
+```
+- We need to create an M-pesa resource, all datatypes are strings.
+- Run ``` rails g resource Mpesa phoneNumber amount checkoutRequestID  merchantRequestID mpesaReceiptNumber ```.
+- We also need a model for the access token, run ``` rails g model AccessToken token```.
+- Run ``` rails db:migrate ``` 
 
-    We need to create an M-pesa resource, all datatypes are strings.
-    Run rails g resource Mpesa phoneNumber amount checkoutRequestID  merchantRequestID mpesaReceiptNumber.
-    We also need a model for the access token, run  rails g model AccessToken token.
-    Run rails db:migrate
-
-Configurations
-
-    Navigate to config/environments/development.rb and add the following code.
-
+#### Configurations
+- Navigate to config/environments/development.rb and add the following code.
+```ruby
 config.hosts << /[a-z0-9]+\.ngrok\.io/
-
-    This will allow us to access our rails app from ngrok.
-    Navigate to config/initializers/cors.rb and add the following code or uncomment the existing code.
-
+```
+- This will allow us to access our rails app from ngrok.
+- Navigate to config/initializers/cors.rb and add the following code or uncomment the existing code.
+```ruby
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
     origins '*'
     resource '*', headers: :any, methods: [:get, :post, :options]
   end
 end
+```
+- Be sure to replace origins 'example.com' with origins '*'if you uncomment existing code instead of adding the above code.
 
-    Be sure to replace origins 'example.com' with origins '*'if you uncomment existing code instead of adding the above code.
-
-Environment variables
-
-    Inside the config folder create a file called local_env.yml and add the following code.
-
+#### Environment variables
+- Inside the config folder create a file called local_env.yml and add the following code.
+```ruby
 MPESA_CONSUMER_KEY: '<your consumer key>'
 MPESA_CONSUMER_SECRET: '<your consumer secret>'
 MPESA_PASSKEY: '<your passkey>'
@@ -61,46 +57,38 @@ MPESA_INITIATOR_NAME: 'testapi'
 MPESA_INITIATOR_PASSWORD: '<your initiator password>'
 CALLBACK_URL: '< your ngrok url>'
 REGISTER_URL: "https://sandbox.safaricom.co.ke/mpesa/c2b/v1/registerurl"
-
+```
 ** Note about the CALLBACK_URL **
+- To get you callback url first run your rails server ``` rails s ``` and copy the url from the terminal.
+- Then go to ngrok and run ``` ngrok http <port number> ``` and replace <port number> with the port number from your rails server.
+- This will generate a url that you can use as your callback url.
+- In my case above ``` ngrok http http://127.0.0.1:3000 ``` and the url generated was ``` https://5d5b-105-161-115-83.in.ngrok.io```
+- ***Note that the url generated by ngrok changes every time you run it, so you will need to update your local_env.yml file with the new url every time you run ngrok.***
+- Navigate to the ngrok url, you should see the page below, click on visit site which should take you to your rails app.
+- If you get a Blocked Host error, check these [stackoverflow](https://stackoverflow.com/questions/53878453/upgraded-rails-to-6-getting-blocked-host-error) solutions.
+- In my case I had to replace ``` config.hosts << /[a-z0-9]+\.ngrok\.io/ ``` with ``` config.hosts.clear``` in config/environments/development.rb. This however is not recommended for production.
 
-    To get you callback url first run your rails server rails s and copy the url from the terminal.
+- Remember to add your local_env.yml file to your .gitignore file.
 
-    Then go to ngrok and run ngrok http <port number> and replace with the port number from your rails server.
-
-    This will generate a url that you can use as your callback url.
-
-    In my case above ngrok http http://127.0.0.1:3000 and the url generated was  https://5d5b-105-161-115-83.in.ngrok.io
-
-    Note that the url generated by ngrok changes every time you run it, so you will need to update your local_env.yml file with the new url every time you run ngrok.
-
-    Navigate to the ngrok url, you should see the page below, click on visit site which should take you to your rails app.
-
-    If you get a Blocked Host error, check these stackoverflow solutions.
-
-    In my case I had to replace config.hosts << /[a-z0-9]+\.ngrok\.io/ with  config.hosts.clear in config/environments/development.rb. This however is not recommended for production.
-
-    Remember to add your local_env.yml file to your .gitignore file.
-
-    We need rails to load our environment variables, to do this add the following code to config/application.rb.
-
+- We need rails to load our environment variables, to do this add the following code to config/application.rb.
+```ruby
 config.before_configuration do
   env_file = File.join(Rails.root, 'config', 'local_env.yml')
   YAML.load(File.open(env_file)).each do |key, value|
     ENV[key.to_s] = value
   end if File.exists?(env_file)
 end
+```
 
-    Wheeww!! That was a lot of configurations, let's now implement the code.
+- Wheeww!! That was a lot of configurations, let's now implement the code.
 
-Implementing the code
-
-    First we need to write private methods to generate and get an access token from the Authorization API.
-    Generate Access Token Request -> Gives you a time bound access token to call allowed APIs in the sandbox.
-    Get Access Token -> Used to check if generate_acces_token_request is successful or not then it reads the responses and extracts the access token from the response and saves it to the database.
-    Add the following code to app/controllers/mpesa_controller.rb.
-    First require the rest-client gem require 'rest-client' and add then following code.
-
+#### Implementing the code
+- First we need to write private methods to generate and get an access token from the Authorization API.
+- Generate Access Token Request -> Gives you a time bound access token to call allowed APIs in the sandbox. 
+- Get Access Token -> Used to check if generate_acces_token_request is successful or not then it reads the responses and extracts the access token from the response and saves it to the database.
+- Add the following code to app/controllers/mpesa_controller.rb.
+- First require the rest-client gem ``` require 'rest-client' ``` and add then following code.
+```ruby
 private
 
     def generate_access_token_request
@@ -131,14 +119,27 @@ private
         AccessToken.create!(token: token)
         token
     end
+```
 
-Stk Push Request
-
-    Under APIs -> M-pesa Express you can simulate a stk push request by selecting your app and changing Party A and Phone Number to your phone number.
-    Looking at the JSON the request body has the following parameters; { BusinessShortCode - The organization shortcode used to receive the transaction. Password - The password for encrypting the request.(Base64 encoded string,a combination of your BusinessShortCode, Passkey and Timestamp) Timestamp - The timestamp of the transaction in the format yyyymmddhhiiss TransactionType - The type of transaction (CustomerPayBillOnline or CustomerBuyGoodsOnline) Amount - The amount being transacted PartyA - The phone number sending the money. PartyB - The organization shortcode receiving the funds.Can be the same as the business shortcode. PhoneNumber - The mobile number to receive the STK push.Can be the same as Party A. CallBackURL - The url to where responses from M-Pesa will be sent to. Should be valid and secure. AccountReference - Value displayed to the customer in the STK Pin prompt message. TransactionDesc - A description of the transaction. }
-    You can read more on their documentation -> Lipa Na M-pesa Online API -> Request Parameter Definition.
-    Add the following code to app/controllers/mpesa_controller.rb.
-
+##### Stk Push Request
+- Under APIs -> M-pesa Express you can [simulate](https://developer.safaricom.co.ke/APIs/MpesaExpressSimulate) a stk push request by selecting your app and changing Party A and Phone Number to your phone number.
+- Looking at the JSON the request body has the following parameters;
+{
+  BusinessShortCode - The organization shortcode used to receive the transaction.
+  Password - The password for encrypting the request.(Base64 encoded string,a combination of your BusinessShortCode, Passkey and Timestamp)
+  Timestamp - The timestamp of the transaction in the format yyyymmddhhiiss
+  TransactionType - The type of transaction (CustomerPayBillOnline or CustomerBuyGoodsOnline)
+  Amount - The amount being transacted
+  PartyA - The phone number sending the money.
+  PartyB - The organization shortcode receiving the funds.Can be the same as the business shortcode.
+  PhoneNumber - The mobile number to receive the STK push.Can be the same as Party A.
+  CallBackURL - The url to where responses from M-Pesa will be sent to. Should be valid and secure.
+  AccountReference - Value displayed to the customer in the STK Pin prompt message.
+  TransactionDesc - A description of the transaction.
+}
+- You can read more on their [documentation](https://developer.safaricom.co.ke/Documentation) -> Lipa Na M-pesa Online API -> Request Parameter Definition.
+- Add the following code to app/controllers/mpesa_controller.rb.
+```ruby
  def stkpush
         phoneNumber = params[:phoneNumber]
         amount = params[:amount]
@@ -184,21 +185,21 @@ Stk Push Request
         end
         render json: response
     end
-
-    Navigate to routes.rb and add the following code.
-
+```
+- Navigate to routes.rb and add the following code.
+```ruby
 post 'stkpush', to: 'mpesa#stkpush'
-
-    Open postman and make a post request to your ngrok url with the following parameters.
-
+```
+- Open postman and make a post request to your ngrok url with the following parameters.
+```json
 {
     "phoneNumber": "2547xxxxxxxx",
     "amount": "1"
 }
-
-    The request sents an STK push to the phone number provided.
-    Your response should look like this.
-
+```
+- The request sents an STK push to the phone number provided.
+- Your response should look like this.
+```json
 {
     "MerchantRequestID": "xxxx-xxxx-xxxx-xxxx",
     "CheckoutRequestID": "ws_CO_XXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -206,16 +207,21 @@ post 'stkpush', to: 'mpesa#stkpush'
     "ResponseDescription": "Success. Request accepted for processing",
     "CustomerMessage": "Success. Request accepted for processing"
 }
+```
+- Save the CheckoutRequestID for the next step.
 
-    Save the CheckoutRequestID for the next step.
-
-Stk Query Request
-
-    We can use the mpesa query to check if the payment was successful or not.
-    Under APIs -> M-pesa Express you can simulate a query a stk push request by selecting your app and inputing the CheckoutRequestID you got from the previous step.
-    The request body has the following parameters; { BusinessShortCode - The organization shortcode used to receive the transaction. Password - The password for encrypting the request.(Base64 encoded string,a combination of your BusinessShortCode, Passkey and Timestamp) Timestamp - The timestamp of the transaction in the format yyyymmddhhiiss CheckoutRequestID - The CheckoutRequestID used to identify the transaction on M-Pesa. }
-    Add the following code to app/controllers/mpesa_controller.rb.
-
+#### Stk Query Request
+- We can use the mpesa query to check if the payment was successful or not.
+- Under APIs -> M-pesa Express you can simulate a [query](https://developer.safaricom.co.ke/APIs/MpesaExpressSimulate) a stk push request by selecting your app and inputing the CheckoutRequestID you got from the previous step.
+- The request body has the following parameters;
+{
+  BusinessShortCode - The organization shortcode used to receive the transaction.
+  Password - The password for encrypting the request.(Base64 encoded string,a combination of your BusinessShortCode, Passkey and Timestamp)
+  Timestamp - The timestamp of the transaction in the format yyyymmddhhiiss
+  CheckoutRequestID - The CheckoutRequestID used to identify the transaction on M-Pesa.
+}
+- Add the following code to app/controllers/mpesa_controller.rb.
+```ruby
 def stkquery
         url = "https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query"
         timestamp = "#{Time.now.strftime "%Y%m%d%H%M%S"}"
@@ -252,19 +258,19 @@ def stkquery
         end
         render json: response
     end
-
-    Navigate to routes.rb and add the following code.
-
+```
+- Navigate to routes.rb and add the following code.
+```ruby
 post 'stkquery', to: 'mpesa#stkquery'
-
-    Open postman and make a post request to your ngrok url with the following parameters.
-
+```
+- Open postman and make a post request to your ngrok url with the following parameters.
+```json
 {
     "checkoutRequestID": "ws_CO_XXXXXXXXXXXXXXXXXXXXXXXXX"
 }
-
-    Your response should look like this.
-
+```
+- Your response should look like this.
+```json
 [
     "success",
     {
@@ -276,10 +282,10 @@ post 'stkquery', to: 'mpesa#stkquery'
         "ResultDesc": "Request cancelled by user"
     }
 ]
-
-    You can use the ResultCode to check if the payment was successful or not.
-    Your mpesas_controller.rb should look like this.
-
+```
+- You can use the ResultCode to check if the payment was successful or not.
+- Your mpesas_controller.rb should look like this.
+```ruby
 class MpesasController < ApplicationController
     
     require 'rest-client'
@@ -403,10 +409,21 @@ class MpesasController < ApplicationController
 
 
 end
-
-    Your routes.rb should look like this.
-
+```
+- Your routes.rb should look like this.
+```ruby
 Rails.application.routes.draw do
     post 'stkpush', to: 'mpesas#stkpush'
     post 'stkquery', to: 'mpesas#stkquery'
 end
+```
+- The full code for this tutorial can be found [here](https://github.com/Annastacia-dev/daraja-test).
+
+That's it for this tutorial. I hope you found it helpful. If you have any questions, feel free to reach out to me on email: annetotoh@gmail.com.
+THANK YOU!
+
+
+
+
+
+
